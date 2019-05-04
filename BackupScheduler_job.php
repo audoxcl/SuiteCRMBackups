@@ -1,5 +1,14 @@
 <?php
 
+/*********************************************************************************
+* This code was developed by:
+* Audox Ingeniería SpA.
+* You can contact us at:
+* Web: www.audox.cl
+* Email: info@audox.cl
+* Skype: audox.ingenieria
+********************************************************************************/
+
 $job_strings[] = 'Backup';
 
 function BackupSchedulerValidateLicense($url, $fields){
