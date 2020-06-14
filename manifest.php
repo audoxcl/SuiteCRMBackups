@@ -13,30 +13,30 @@ $manifest = array(
 	'acceptable_sugar_versions' => array(
 		'6*',
 		'7*',
+		'8*',
+		'9*',
 	),
 	'is_uninstallable' => true,
-	'name' => 'Backup Scheduler',
-	'author' => 'Audox Ingenieria SpA.',
-	'description' => 'Backup Scheduler',
-	'published_date' => '2018-11-30 00:00:00',
-	'version' => 'v1.0',
+	'name' => 'Backups Scheduler',
+	'author' => 'Audox Ingeniería SpA.',
+	'description' => 'Backups Scheduler',
+	'published_date' => '2020-03-12 00:00:00',
+	'version' => 'v2.3',
 	'type' => 'module',
 );
 
 $installdefs = array(
-	'id' => 'Backup Scheduler',
+	'id' => 'Backups Scheduler 2.3',
 	'language' => array(
 		array(
-			'from' => '<basepath>/en_us.BackupScheduler.php',
+			'from' => '<basepath>/en_us.backup.lang.php',
 			'to_module' => 'Schedulers',
 			'language' => 'en_us',
 		),
 	),
 	'scheduledefs' => array(
 		array(
-			'from' => '<basepath>/BackupScheduler_job.php',
+			'from' => '<basepath>/backup.php',
 		),
 	),
 );
-
-?>
