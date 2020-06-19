@@ -83,56 +83,73 @@ function getInstanceUrl()
     return $site_url;
 }
 
-function UploadToFTP($configArray)
+function UploadToHost($configArray)
 {
-    $GLOBALS['log']->fatal("Backup CRM uploading files to ftp servers");
+    $GLOBALS['log']->fatal("Backup CRM uploading files");
     global $sugar_config;
     $results = array();
     $files = $configArray['files'];
-    foreach ($sugar_config['backup']['ftps'] as $key => $ftp) {
-        $GLOBALS['log']->fatal("Backup CRM uploading files to ftp server: " . $ftp['server'] . " (ssl: " . (($ftp['ssl'] == true) ? 1 : 0) . ")");
+    foreach ($sugar_config['backup']['connections'] as $key => $connection) {
+        $GLOBALS['log']->fatal("Backup CRM uploading files to host: " . $connection['host'] . " (protocol: " . $connection['protocol'] . ")");
 
-        $ftp_server = $ftp['server'];
-        $ftp_port = 21;
-        $ftp_timeout = 90;
-        $ftp_user_name = $ftp['user_name'];
-        $ftp_user_pass = $ftp['user_pass'];
-        $ftp_dir = $ftp['dir'];
+        $connection_host = $connection['host'];
+        $connection_port = 21;
+        $connection_timeout = 90;
+        $connection_username = $connection['username'];
+        $connection_password = $connection['password'];
+        $connection_path = $connection['path'];
 
-        $results_key = $ftp_user_name . ":****@" . $ftp_server;
+        $results_key = $connection_username . ":****@" . $connection_host;
         $results[$results_key] = "error";
 
-        if (!empty($ftp['ssl'])) {
-            if (function_exists('ssh2_connect')) {
-                $connection = ssh2_connect($ftp_server, 22);
-                if ($connection) {
-                    ssh2_auth_password($connection, $ftp_user_name, $ftp_user_pass);
-                    $sftp = ssh2_sftp($connection);
-                    $resFile = fopen("ssh2.sftp://$sftp/" . $sqlBackupFile, 'w');
-                    $srcFile = fopen($sqlBackupFile, 'r');
-                    $writtenBytes = stream_copy_to_stream($srcFile, $resFile);
-                    fclose($resFile);
-                    fclose($srcFile);
-                    $GLOBALS['log']->fatal("Backup CRM ftp closed");
-                } else {
-                    $GLOBALS['log']->fatal("Backup CRM cannot connect to sftp");
-                }
-            } else {
-                $GLOBALS['log']->fatal("Backup CRM function ssh2_connect does not exist");
-            }
-
-        } else {
-            $conn_id = ftp_connect($ftp_server, $ftp_port, $ftp_timeout);
-            if ($conn_id) {
-                if (ftp_login($conn_id, $ftp_user_name, $ftp_user_pass)) {
-                    ftp_pasv($conn_id, true);
-                    ftp_chdir($conn_id, $ftp_dir);
+        if(in_array($connection['protocol'], array("scp", "sftp"))){
+            $conn = ssh2_connect($connection_host, 22);
+            if ($conn) {
+                if(ssh2_auth_password($conn, $connection_username, $connection_password)){
                     foreach ($files as $file) {
                         if (file_exists($file)) {
                             $GLOBALS['log']->fatal("Backup CRM uploading file: " . $file);
+                            if($connection['protocol'] == "scp"){
+                                $time = time();
+                                if (ssh2_scp_send($conn, $file, $file)) {
+                                    $results[$results_key] = "success";
+                                    $GLOBALS['log']->fatal("Backup CRM file uploaded in ".(time()-$time)." seconds: " . $file);
+                                } else {
+                                    $GLOBALS['log']->fatal("Backup CRM file uploaded error: " . $file);
+                                }
+                            }
+                            elseif($connection['protocol'] == "sftp"){
+                                // pending: add validations
+                                $sftp = ssh2_sftp($conn);
+                                $contents = file_get_contents($file);
+                                $time = time();
+                                file_put_contents("ssh2.sftp://{$sftp}".$connection_path."/".$file, $contents);
+                                $GLOBALS['log']->fatal("Backup CRM file uploaded in ".(time()-$time)." seconds: " . $file);
+                            }
+                        }
+                    }
+                }
+                else{
+                    $GLOBALS['log']->fatal("Backup CRM auth error");
+                }
+            }
+            else{
+                $GLOBALS['log']->fatal("Backup CRM connection error");
+            }
+        }
+        else {
+            $conn_id = ftp_connect($connection_host, $connection_port, $connection_timeout);
+            if ($conn_id) {
+                if (ftp_login($conn_id, $connection_username, $connection_password)) {
+                    ftp_pasv($conn_id, true);
+                    ftp_chdir($conn_id, $connection_path);
+                    foreach ($files as $file) {
+                        if (file_exists($file)) {
+                            $GLOBALS['log']->fatal("Backup CRM uploading file: " . $file);
+                            $time = time();
                             if (ftp_put($conn_id, $file, $file, FTP_ASCII)) {
                                 $results[$results_key] = "success";
-                                $GLOBALS['log']->fatal("Backup CRM file uploaded: " . $file);
+                                $GLOBALS['log']->fatal("Backup CRM file uploaded in ".(time()-$time)." seconds: " . $file);
                             } else {
                                 $GLOBALS['log']->fatal("Backup CRM file uploaded error: " . $file);
                             }
@@ -237,7 +254,7 @@ function BackupDatabase()
     $delete_local_backups = false;
     $delete_local_backups = $sugar_config['backup']['delete_local_backups'];
 
-    $GLOBALS['log']->fatal("Backup CRM Database Starting...");
+    $GLOBALS['log']->fatal("Backup CRM database backup starting...");
     $dateYmdHis = date('YmdHis');
 
     $hostname = $sugar_config['dbconfig']['db_host_name'];
@@ -258,15 +275,18 @@ function BackupDatabase()
     set_time_limit(600);
     ini_set('max_execution_time', 600);
     ini_set('mysql.connect_timeout', 600);
-    $GLOBALS['log']->fatal("Backup CRM backuping database ($sql_command)...");
+    // $GLOBALS['log']->fatal("Backup CRM backuping database ($sql_command)...");
+    $GLOBALS['log']->fatal("Backup CRM backuping database...");
+    $time = time();
     system($sql_command);
+    $GLOBALS['log']->fatal("Backup CRM database backuped in ".(time()-$time)." seconds");
 
     $configArray = array(
         "destination_directory",
         'files' => $files,
     );
 
-    UploadToFTP($configArray);
+    UploadToHost($configArray);
 
     return true;
 
@@ -287,7 +307,7 @@ function BackupFiles()
     $tar = $sugar_config['backup']['tar'];
     $delete_local_backups = !empty($sugar_config['backup']['delete_local_backups']) ? $sugar_config['backup']['delete_local_backups'] : false;
 
-    $GLOBALS['log']->fatal("Backup CRM Files Starting...");
+    $GLOBALS['log']->fatal("Backup CRM files backup starting...");
     $dateYmdHis = date('YmdHis');
 
     $instance_url = getInstanceUrl();
@@ -343,8 +363,11 @@ function BackupFiles()
     set_time_limit(600);
     ini_set('max_execution_time', 600);
     ini_set('mysql.connect_timeout', 600);
-    $GLOBALS['log']->fatal("Backup CRM backuping files ($files_command)...");
+    // $GLOBALS['log']->fatal("Backup CRM backuping files ($files_command)...");
+    $GLOBALS['log']->fatal("Backup CRM backuping files...");
+    $time = time();
     system($files_command);
+    $GLOBALS['log']->fatal("Backup CRM files backuped in ".(time()-$time)." seconds");
 
     $configurationArray = array(
         "custom_directory_only",
@@ -355,7 +378,7 @@ function BackupFiles()
         'files' => $files,
     );
 
-    UploadToFTP($configurationArray);
+    UploadToHost($configurationArray);
 
     return true;
 
