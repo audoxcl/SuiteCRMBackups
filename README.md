@@ -6,6 +6,10 @@ Schedule your own backups of dababase and files
 
 This little plugin will make the backups for you and copy them to your FTP server.
 
+Requirements for SFTP and SCP:
+sudo apt install php-ssh2
+sudo apt install php7.2-ssh2
+
 After installing, you will have to adapt `config_override.php` settings to match your environment.
 ```php
 $sugar_config['backup']['email_addresses']=['your@email.com'];
