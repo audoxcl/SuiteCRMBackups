@@ -1,15 +1,25 @@
 # SuiteCRMBackups
 
-Schedule your own backups of dababase and files.
-
+Schedule your own backups of database and files and avoid loss your data in case your CRM or hosting or server crashed or failed.
 
 ## How to use
 
-This little plugin will make the backups for you and copy them to your FTP server.
+This simple module backups your SugarCRM/SuiteCRM instance and uploads the backup files to many others FTP servers at the same time.
+
+You can backup database and files at the same time or create different schedulers, for instance:  
+* Backup database everyday
+* Backup files Sundays at 00:00
+* Backup database and files 1st of each month at 00:00
+
+With this module you are able to upload the backup files to many servers at the same time.
+
+## Requirements
 
 Requirements for SCP and SFTP:  
 sudo apt install php-ssh2  
 sudo apt install php7.2-ssh2
+
+## Configuration
 
 After installing, you will have to adapt `config_override.php` settings to match your environment.
 
@@ -39,8 +49,13 @@ $sugar_config['backup']['connections'][1]['password'] = 'extreMELYcomplexPasw0rd
 $sugar_config['backup']['connections'][1]['path'] = '';
 ```
 
-To disable license validation please use this setting in config_override.php:
+To disable license validation please use this setting in `config_override.php`:
 
 ```php
 $sugar_config['backup']['validate_license'] = false;
 ```
+
+Once you set `config_override.php` you have to enable the schedulers you need in:  
+Administration -> Schedulers
+
+You can use the 3 schedulers that are created automatically once you install the module.
