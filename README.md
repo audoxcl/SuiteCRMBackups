@@ -4,14 +4,17 @@ Schedule your own backups of database and files and avoid loss your data in case
 
 ## How to use
 
-This simple module backups your SugarCRM/SuiteCRM instance and uploads the backup files to many others FTP servers at the same time.
+This simple module backups your SugarCRM/SuiteCRM instance and uploads the backup files to many others servers at the same time.
 
 You can backup database and files at the same time or create different schedulers, for instance:  
 * Backup database everyday
 * Backup files Sundays at 00:00
 * Backup database and files 1st of each month at 00:00
 
-With this module you are able to upload the backup files to many servers at the same time.
+With this module you are able to upload the backup files to many servers at the same time using these protocols:
+* FTP
+* SFTP
+* SCP
 
 ## Requirements
 
