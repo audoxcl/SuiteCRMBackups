@@ -26,7 +26,7 @@ $manifest = array(
 );
 
 $installdefs = array(
-	'id' => 'Backups Scheduler 2.3',
+	'id' => 'Backups Scheduler',
 	'language' => array(
 		array(
 			'from' => '<basepath>/en_us.backup.lang.php',
