@@ -21,7 +21,7 @@ $manifest = array(
 	'author' => 'Audox Ingeniería SpA.',
 	'description' => 'Backups Scheduler',
 	'published_date' => '2020-03-12 00:00:00',
-	'version' => 'v2.3',
+	'version' => 'v2.5',
 	'type' => 'module',
 );
 
