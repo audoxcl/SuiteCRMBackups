@@ -13,16 +13,6 @@ array_push($job_strings, 'Backup');
 array_push($job_strings, 'BackupDatabase');
 array_push($job_strings, 'BackupFiles');
 
-function BackupSchedulerValidateLicense($url, $fields)
-{
-    $curl = curl_init($url);
-    curl_setopt($curl, CURLOPT_POST, true);
-    curl_setopt($curl, CURLOPT_POSTFIELDS, $fields);
-    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-    $response = json_decode(curl_exec($curl));
-    return $response;
-}
-
 function BackupSchedulerSendEmail($subject, $body)
 {
     global $sugar_config;
@@ -30,8 +20,8 @@ function BackupSchedulerSendEmail($subject, $body)
     $defaults = $emailObj->getSystemDefaultEmail();
     $mail = new SugarPHPMailer();
     $mail->setMailerForSystem();
-    $mail->From = "soporte@audox.cl";
-    $mail->FromName = "Soporte Audox Soluciones Tecnologicas";
+    $mail->From = "support@audox.cl";
+    $mail->FromName = "Audox Soluciones Tecnologicas Support";
     $mail->ClearAllRecipients();
     $mail->ClearReplyTos();
     $mail->Subject = $subject;
@@ -44,20 +34,35 @@ function BackupSchedulerSendEmail($subject, $body)
     $mail->Send();
 }
 
+/*
+You can use this license validation function to create more advanced versions of this backup module.
+To disable license validation please use this setting in config_override.php:
+$sugar_config['backup']['validate_license'] = false;
+*/
+
 function validateLicense()
 {
-    global $sugar_config, $timedate;
+    global $sugar_config;
 
     $site_url = $sugar_config['site_url'];
 
+    $LicenseURL = $sugar_config['backup']['LicenseURL'];
     $LicenseId = $sugar_config['backup']['LicenseId'];
-    $url = "https://crm.audox.cl/index.php?entryPoint=ValidateService";
+
     $fields = array(
         'Remote' => $_SERVER['REMOTE_ADDR'],
-        'Url' => $sugar_config['site_url'],
+        'Url' => $site_url,
         'ServiceId' => $LicenseId,
     );
-    if (BackupSchedulerValidateLicense($url, $fields) == 0) {
+
+    $curl = curl_init($LicenseURL);
+    curl_setopt($curl, CURLOPT_POST, true);
+    curl_setopt($curl, CURLOPT_POSTFIELDS, $fields);
+    curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+    $response = json_decode(curl_exec($curl));
+    curl_close($curl);
+
+    if ($response == 0) {
         $subject = "CRM Backup not valid license";
         $body = $subject . " for $site_url<br/><br/>";
         BackupSchedulerSendEmail($subject, $body);
@@ -67,7 +72,7 @@ function validateLicense()
     else return true;
 }
 
-function getInstanceUrl()
+function getFormatedInstanceUrl()
 {
     global $sugar_config;
     $site_url = $sugar_config['site_url'];
@@ -224,7 +229,7 @@ function UploadToHost($configArray)
         $config_string[] = "$value</td><td>$aux";
     }
     $config_string = "<table border=\"1\"><tr><td>" . implode("</td></tr><tr><td>", $config_string) . "</td></tr></table>";
-    $instance_url = getInstanceUrl();
+    $instance_url = getFormatedInstanceUrl();
     $subject = "CRM Backup result for " . $instance_url . $subject_warning;
     $body = "CRM Backup result:<br/><br/>
     Files:<br/>
@@ -249,8 +254,8 @@ function Backup()
 
 function BackupDatabase()
 {
-    if(validateLicense() == false) return true;
     global $sugar_config;
+    if($sugar_config['backup']['validate_license'] == true && validateLicense() == false) return true;
     $delete_local_backups = false;
     $delete_local_backups = $sugar_config['backup']['delete_local_backups'];
 
@@ -262,7 +267,7 @@ function BackupDatabase()
     $password = $sugar_config['dbconfig']['db_password'];
     $dbName = $sugar_config['dbconfig']['db_name'];
 
-    $instance_url = getInstanceUrl();
+    $instance_url = getFormatedInstanceUrl();
 
     $sqlBackupFile = "backup_" . $instance_url . "_" . $dateYmdHis . ".sql";
 
@@ -294,8 +299,8 @@ function BackupDatabase()
 
 function BackupFiles()
 {
-    if(validateLicense() == false) return true;
     global $sugar_config;
+    if($sugar_config['backup']['validate_license'] == true && validateLicense() == false) return true;
     $custom_directory_only = false;
     $custom_directory_only = $sugar_config['backup']['custom_directory_only'];
     $additional_directories = $sugar_config['backup']['additional_directories'];
@@ -310,7 +315,7 @@ function BackupFiles()
     $GLOBALS['log']->fatal("Backup CRM files backup starting...");
     $dateYmdHis = date('YmdHis');
 
-    $instance_url = getInstanceUrl();
+    $instance_url = getFormatedInstanceUrl();
 
     $filesBackupFile = "backup_" . $instance_url . "_" . $dateYmdHis;
     if ($tar == true) {
