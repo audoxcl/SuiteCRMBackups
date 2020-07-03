@@ -62,3 +62,6 @@ Once you set `config_override.php` you have to enable the schedulers you need in
 Administration -> Schedulers
 
 You can use the 3 schedulers that are created automatically once you install the module.
+
+Download:  
+[Here you can download ZIP file ready to install in your CRM instance](https://github.com/audoxcl/SugarCRMCustomQueries/releases/latest/download/CustomQueries.zip)
