@@ -63,5 +63,7 @@ Administration -> Schedulers
 
 You can use the 3 schedulers that are created automatically once you install the module.
 
+## Download
+
 Download:  
-[Here you can download ZIP file ready to install in your CRM instance](https://github.com/audoxcl/SugarCRMCustomQueries/releases/latest/download/CustomQueries.zip)
+[Here you can download ZIP file ready to install in your CRM instance](https://github.com/audoxcl/SuiteCRMBackups/releases/latest/download/BackupsScheduler.zip)
