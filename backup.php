@@ -20,8 +20,8 @@ function BackupSchedulerSendEmail($subject, $body)
     $defaults = $emailObj->getSystemDefaultEmail();
     $mail = new SugarPHPMailer();
     $mail->setMailerForSystem();
-    $mail->From = "support@audox.cl";
-    $mail->FromName = "Audox Soluciones Tecnologicas Support";
+    $mail->From = $defaults['email'];
+    $mail->FromName = $defaults['name'];
     $mail->ClearAllRecipients();
     $mail->ClearReplyTos();
     $mail->Subject = $subject;
